@@ -25,8 +25,7 @@ int main(void)
     shared_resource = 0;
     return_code     = EXIT_SUCCESS;
     created_threads = 0;
-
-    result = initialize_mutex(&lock);
+    result          = initialize_mutex(&lock);
 
     if(result != 0)
     {
@@ -40,6 +39,7 @@ int main(void)
     for(int i = 0; i < 10; i++)
     {
         result = pthread_create(&threads[i], NULL, increment_resource, &thread_data);
+
         if(result != 0)
         {
             perror("pthread_create");
@@ -112,8 +112,8 @@ static void *increment_resource(void *arg)
     lock            = data->lock;
     shared_resource = data->shared_resource;
     thread_id       = pthread_self();
+    result          = pthread_mutex_lock(lock);
 
-    result = pthread_mutex_lock(lock);
     if(result != 0)
     {
         perror("pthread_mutex_lock");
@@ -122,8 +122,8 @@ static void *increment_resource(void *arg)
 
     (*shared_resource)++;
     printf("Thread %lu modified the shared resource. New value: %d\n", (unsigned long)thread_id, *shared_resource);
-
     result = pthread_mutex_unlock(lock);
+
     if(result != 0)
     {
         perror("pthread_mutex_unlock");

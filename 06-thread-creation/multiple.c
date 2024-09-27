@@ -53,10 +53,12 @@ int main(void)
 
 static void *thread_function(void *arg)
 {
+    int value;
     int thread_num;
 
     thread_num = *(int *)arg;
-    printf("Thread %d is running.\n", thread_num);
+    value = *(int *)arg;
+    printf("Thread %d is running. Argument passed: %d\n", thread_num, value);
 
     return NULL;
 }
