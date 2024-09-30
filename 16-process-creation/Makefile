@@ -20,6 +20,7 @@ ABORT_SOURCES = abort.c
 EXIT_FUNC_SOURCES = exit.c
 FORK_SOURCES = fork.c
 WAITPID_SOURCES = waitpid.c
+TEMPLATE_SOURCES = template.c
 
 EXIT_BINARY = _exit
 EXECL_BINARY = execl
@@ -29,6 +30,7 @@ ABORT_BINARY = abort
 EXIT_FUNC_BINARY = exit
 FORK_BINARY = fork
 WAITPID_BINARY = waitpid
+TEMPLATE_BINARY = template
 
 # Attempt to compile with each sanitizer to check support
 CHECK_SANITIZER = \
@@ -56,7 +58,7 @@ else ifeq ($(CC), clang)
 endif
 
 all: clang-format $(EXIT_BINARY) $(EXECL_BINARY) $(FORK_EXECL_BINARY) $(WAIT_BINARY) $(ABORT_BINARY) \
-	$(EXIT_FUNC_BINARY) $(FORK_BINARY) $(WAITPID_BINARY) analyze clang-tidy cppcheck
+	$(EXIT_FUNC_BINARY) $(FORK_BINARY) $(WAITPID_BINARY) $(TEMPLATE_BINARY) analyze clang-tidy cppcheck
 
 # Build rules for each binary
 $(EXIT_BINARY): $(EXIT_SOURCES)
@@ -83,6 +85,9 @@ $(FORK_BINARY): $(FORK_SOURCES)
 $(WAITPID_BINARY): $(WAITPID_SOURCES)
 	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(WAITPID_BINARY) $(WAITPID_SOURCES)
 
+$(TEMPLATE_BINARY): $(TEMPLATE_SOURCES)
+	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(TEMPLATE_BINARY) $(TEMPLATE_SOURCES)
+
 analyze:
 	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(EXIT_SOURCES) -c
 	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(EXECL_SOURCES) -c
@@ -92,25 +97,26 @@ analyze:
 	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(EXIT_FUNC_SOURCES) -c
 	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(FORK_SOURCES) -c
 	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(WAITPID_SOURCES) -c
+	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(TEMPLATE_SOURCES) -c
 
 clang-tidy:
 	clang-tidy -quiet --warnings-as-errors=* -checks='*,-cert-err33-c,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-readability-identifier-length,-llvmlibc-restrict-system-libc-headers,-cppcoreguidelines-init-variables,-altera-unroll-loops,-llvm-header-guard,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-unused-parameters,-android-cloexec-dup,-android-cloexec-open,-android-cloexec-creat,-android-cloexec-fopen,-bugprone-easily-swappable-parameters,-altera-id-dependent-backward-branch,-altera-struct-pack-align,-misc-include-cleaner' \
 	$(EXIT_SOURCES) $(EXECL_SOURCES) $(FORK_EXECL_SOURCES) $(WAIT_SOURCES) $(ABORT_SOURCES) \
-	$(EXIT_FUNC_SOURCES) $(FORK_SOURCES) $(WAITPID_SOURCES) \
+	$(EXIT_FUNC_SOURCES) $(FORK_SOURCES) $(WAITPID_SOURCES) $(TEMPLATE_SOURCES) \
 	-- $(CFLAGS)
 
 cppcheck:
 	cppcheck --enable=all --error-exitcode=1 --inconclusive --check-level=exhaustive --inline-suppr --suppress=missingIncludeSystem --checkers-report=$(CHECKER_REPORT_FILE) --quiet \
 	$(EXIT_SOURCES) $(EXECL_SOURCES) $(FORK_EXECL_SOURCES) $(WAIT_SOURCES) $(ABORT_SOURCES) \
-	$(EXIT_FUNC_SOURCES) $(FORK_SOURCES) $(WAITPID_SOURCES)
+	$(EXIT_FUNC_SOURCES) $(FORK_SOURCES) $(WAITPID_SOURCES) $(TEMPLATE_SOURCES)
 
 clang-format:
 	clang-format -i -- $(EXIT_SOURCES) $(EXECL_SOURCES) $(FORK_EXECL_SOURCES) $(WAIT_SOURCES) $(ABORT_SOURCES) \
-	$(EXIT_FUNC_SOURCES) $(FORK_SOURCES) $(WAITPID_SOURCES)
+	$(EXIT_FUNC_SOURCES) $(FORK_SOURCES) $(WAITPID_SOURCES) $(TEMPLATE_SOURCES)
 
 clean:
 	rm -f $(EXIT_BINARY) $(EXECL_BINARY) $(FORK_EXECL_BINARY) $(WAIT_BINARY) $(ABORT_BINARY) \
-	$(EXIT_FUNC_BINARY) $(FORK_BINARY) $(WAITPID_BINARY)
+	$(EXIT_FUNC_BINARY) $(FORK_BINARY) $(WAITPID_BINARY) $(TEMPLATE_BINARY)
 	rm -f $(CHECKER_REPORT_FILE)
 	rm -rf $(REPORT_DIR)
 	find . -name '*.plist' -delete

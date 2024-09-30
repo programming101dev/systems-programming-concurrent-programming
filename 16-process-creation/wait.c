@@ -6,13 +6,12 @@
 
 int main(void)
 {
+    int   status;
     pid_t pid;
-    int   status = EXIT_SUCCESS;
-    int   child_status;
-    pid_t wait_result;
 
-    // Fork the process
-    pid = fork();
+    status = EXIT_SUCCESS;
+    pid    = fork();
+
     if(pid == -1)
     {
         perror("fork failed");
@@ -22,14 +21,16 @@ int main(void)
 
     if(pid == 0)
     {
-        // Child process
         printf("Child process\n");
         exit(42);    // NOLINT(concurrency-mt-unsafe,-warnings-as-errors)
     }
     else
     {
-        // Parent process
+        int   child_status;
+        pid_t wait_result;
+
         wait_result = wait(&child_status);
+
         if(wait_result == -1)
         {
             perror("wait failed");

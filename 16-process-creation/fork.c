@@ -19,12 +19,10 @@ int main(void)
 
     if(pid == 0)
     {
-        // Child process
         printf("This is the child process\n");
     }
     else
     {
-        // Parent process
         printf("This is the parent process, child PID: %d\n", pid);
     }
 

@@ -4,59 +4,73 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+static int process_child(void);
+static int process_parent(pid_t pid);
+
 int main(void)
 {
+    int   status;
     pid_t pid;
-    int   status = EXIT_SUCCESS;
-    int   child_status;
-    pid_t wait_result;
 
-    // Fork the process
     pid = fork();
+
     if(pid == -1)
     {
         perror("fork failed");
         status = EXIT_FAILURE;
-        goto cleanup;
+        goto done;
     }
 
     if(pid == 0)
     {
-        // Child process
-        int execl_result = execl("/bin/ls", "ls", NULL);
-        if(execl_result == -1)
-        {
-            perror("execl failed");
-            status = EXIT_FAILURE;
-            goto cleanup;
-        }
+        status = process_child();
     }
     else
     {
-        // Parent process
-        printf("Parent process, child PID: %d\n", pid);
-
-        // Wait for the child process to finish
-        wait_result = waitpid(pid, &child_status, 0);
-        if(wait_result == -1)
-        {
-            perror("waitpid failed");
-            status = EXIT_FAILURE;
-            goto cleanup;
-        }
-
-        // Check if the child exited normally
-        if(WIFEXITED(child_status))
-        {
-            printf("Child exited with status %d\n", WEXITSTATUS(child_status));
-        }
-        else
-        {
-            printf("Child did not exit normally\n");
-            status = EXIT_FAILURE;
-        }
+        status = process_parent(pid);
     }
 
-cleanup:
+done:
     return status;
+}
+
+static int process_child(void)
+{
+    execl("/bin/ls", "ls", NULL);
+    perror("execl failed");
+
+    return EXIT_FAILURE;
+}
+
+static int process_parent(pid_t pid)
+{
+    pid_t wait_result;
+    int   child_status;
+    int   ret;
+
+    printf("Parent process, child PID: %d\n", pid);
+    wait_result = waitpid(pid, &child_status, 0);
+
+    if(wait_result == -1)
+    {
+        perror("waitpid failed");
+        ret = EXIT_FAILURE;
+        goto done;
+    }
+
+    if(WIFEXITED(child_status))
+    {
+        printf("Child exited with status %d\n", WEXITSTATUS(child_status));
+    }
+    else
+    {
+        printf("Child did not exit normally\n");
+        ret = EXIT_FAILURE;
+        goto done;
+    }
+
+    ret = EXIT_SUCCESS;
+
+done:
+    return ret;
 }
