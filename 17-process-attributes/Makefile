@@ -12,15 +12,15 @@ SUPPORTED_SANITIZERS =
 CHECKER_REPORT_FILE = cppcheck-report.txt
 REPORT_DIR = scan-results
 
-DETACH_SOURCES = detach.c
-SCHEDULE_SOURCES = schedule.c
-SIZE_SOURCES = size.c
-TEMPLATE_SOURCES = template.c
+LIMITS_SOURCES = limits.c
+PID_SOURCES = pid.c
+PRIORITY_SOURCES = priority.c
+USER_GROUP_SOURCES = user-group.c
 
-DETACH_BINARY = detach
-SCHEDULE_BINARY = schedule
-SIZE_BINARY = size
-TEMPLATE_BINARY = template
+LIMITS_BINARY = limits
+PID_BINARY = pid
+PRIORITY_BINARY = priority
+USER_GROUP_BINARY = user-group
 
 # Attempt to compile with each sanitizer to check support
 CHECK_SANITIZER = \
@@ -47,41 +47,41 @@ else ifeq ($(CC), clang)
 	ANALYZER_FLAGS = -disable-checker unix.Malloc -disable-checker deadcode.DeadStores -disable-checker core.StackAddressEscape -plist-html -o $(REPORT_DIR) --status-bugs
 endif
 
-all: clang-format $(DETACH_BINARY) $(SCHEDULE_BINARY) $(SIZE_BINARY) $(TEMPLATE_BINARY) analyze clang-tidy cppcheck
+all: clang-format $(LIMITS_BINARY) $(PID_BINARY) $(PRIORITY_BINARY) $(USER_GROUP_BINARY) analyze clang-tidy cppcheck
 
 # Build rules for each binary
-$(DETACH_BINARY): $(DETACH_SOURCES)
-	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(DETACH_BINARY) $(DETACH_SOURCES)
+$(LIMITS_BINARY): $(LIMITS_SOURCES)
+	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(LIMITS_BINARY) $(LIMITS_SOURCES)
 
-$(SCHEDULE_BINARY): $(SCHEDULE_SOURCES)
-	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(SCHEDULE_BINARY) $(SCHEDULE_SOURCES)
+$(PID_BINARY): $(PID_SOURCES)
+	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(PID_BINARY) $(PID_SOURCES)
 
-$(SIZE_BINARY): $(SIZE_SOURCES)
-	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(SIZE_BINARY) $(SIZE_SOURCES)
+$(PRIORITY_BINARY): $(PRIORITY_SOURCES)
+	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(PRIORITY_BINARY) $(PRIORITY_SOURCES)
 
-$(TEMPLATE_BINARY): $(TEMPLATE_SOURCES)
-	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(TEMPLATE_BINARY) $(TEMPLATE_SOURCES)
+$(USER_GROUP_BINARY): $(USER_GROUP_SOURCES)
+	$(CC) $(CFLAGS) $(SUPPORTED_SANITIZERS) -o $(USER_GROUP_BINARY) $(USER_GROUP_SOURCES)
 
 analyze:
-	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(DETACH_SOURCES) -c
-	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(SCHEDULE_SOURCES) -c
-	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(SIZE_SOURCES) -c
-	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(TEMPLATE_SOURCES) -c
+	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(LIMITS_SOURCES) -c
+	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(PID_SOURCES) -c
+	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(PRIORITY_SOURCES) -c
+	$(ANALYZER) $(ANALYZER_FLAGS) $(CC) $(CFLAGS) $(ANALYSIS_FLAGS) $(USER_GROUP_SOURCES) -c
 
 clang-tidy:
 	clang-tidy -quiet --warnings-as-errors=* -checks='*,-cert-err33-c,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-readability-identifier-length,-llvmlibc-restrict-system-libc-headers,-cppcoreguidelines-init-variables,-altera-unroll-loops,-llvm-header-guard,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-unused-parameters,-android-cloexec-dup,-android-cloexec-open,-android-cloexec-creat,-android-cloexec-fopen,-bugprone-easily-swappable-parameters,-altera-id-dependent-backward-branch,-altera-struct-pack-align,-misc-include-cleaner' \
-	$(DETACH_SOURCES) $(SCHEDULE_SOURCES) $(SIZE_SOURCES) $(TEMPLATE_SOURCES) \
+	$(LIMITS_SOURCES) $(PID_SOURCES) $(PRIORITY_SOURCES) $(USER_GROUP_SOURCES) \
 	-- $(CFLAGS)
 
 cppcheck:
 	cppcheck --enable=all --error-exitcode=1 --inconclusive --check-level=exhaustive --inline-suppr --suppress=missingIncludeSystem --checkers-report=$(CHECKER_REPORT_FILE) --quiet \
-	$(DETACH_SOURCES) $(SCHEDULE_SOURCES) $(SIZE_SOURCES) $(TEMPLATE_SOURCES)
+	$(LIMITS_SOURCES) $(PID_SOURCES) $(PRIORITY_SOURCES) $(USER_GROUP_SOURCES)
 
 clang-format:
-	clang-format -i -- $(DETACH_SOURCES) $(SCHEDULE_SOURCES) $(SIZE_SOURCES) $(TEMPLATE_SOURCES)
+	clang-format -i -- $(LIMITS_SOURCES) $(PID_SOURCES) $(PRIORITY_SOURCES) $(USER_GROUP_SOURCES)
 
 clean:
-	rm -f $(DETACH_BINARY) $(SCHEDULE_BINARY) $(SIZE_BINARY) $(TEMPLATE_BINARY)
+	rm -f $(LIMITS_BINARY) $(PID_BINARY) $(PRIORITY_BINARY) $(USER_GROUP_BINARY)
 	rm -f $(CHECKER_REPORT_FILE)
 	rm -rf $(REPORT_DIR)
 	find . -name '*.plist' -delete

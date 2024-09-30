@@ -57,7 +57,7 @@ static void *thread_function(void *arg)
     int thread_num;
 
     thread_num = *(int *)arg;
-    value = *(int *)arg;
+    value      = *(int *)arg;
     printf("Thread %d is running. Argument passed: %d\n", thread_num, value);
 
     return NULL;
